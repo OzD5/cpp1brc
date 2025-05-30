@@ -17,20 +17,24 @@ struct Ver1::Stats
 void Ver1::readFile()
 {
 	long long cntr = 0;
-	string line;
-	ifstream file(this->path);
-	file.imbue(locale(file.getloc(), new codecvt_utf8<wchar_t>));
-	unordered_map < string, Stats> cities;
+	std::string line;
+	std::ifstream file(this->path);
+	std::vector<std::string> cityNames;
+	std::unordered_map<std::string, Stats> cities;
+	//We know there's 10 000 cities so reserving space for them is faster than letting the vector always dynamically reserve more space
+	cityNames.reserve(10000);
 	
 	if (!file.is_open()) {
-		std::cerr << "Failed to open file: " << this->path << std::endl;
+		std::cout << "Failed to open file: " << this->path << std::endl;
 		return;
 	}
+
 	while (getline(file, line))
 	{
-		string city;
-		string tempstring;
+		std::string city;
+		std::string tempstring;
 		bool seen = false;
+
 		for (char let : line)
 		{
 			if (let == ';')
@@ -38,48 +42,49 @@ void Ver1::readFile()
 				seen = true;
 				continue;
 			}
-			if (!seen) city.push_back(let);
-			else tempstring.push_back(let);
+			if (!seen)
+				city.push_back(let);
+			else
+				tempstring.push_back(let);
 		}
-		float temp = stof(tempstring);
+		float temp = std::stof(tempstring);
 		if (cities.find(city) != cities.end())
 		{
-			cities[city].count++;
-			cities[city].sum += temp;
-			cities[city].min = min(cities[city].min, temp);
-			cities[city].max = max(cities[city].max, temp);
+			auto& cityStat = cities[city]; //No need to lookup everytime
+			cityStat.count++;
+			cityStat.sum += temp;
+			cityStat.min = (cityStat.count == 1) ? temp : std::min(cityStat.min, temp);
+			cityStat.max = (cityStat.count == 1) ? temp : std::max(cityStat.max, temp);
 		}
 		else
 		{
-			cities[city].count = 1;
-			cities[city].sum = temp;
-			cities[city].min = temp;
-			cities[city].max = temp;
+			cities[city] = { temp,temp,1,temp };
 		}
+		
 		cntr++;
-		if (cntr % 1000000 == 0) cout << cntr << "\n";
+		if (cntr % 1000000 == 0) std::cout << cntr << "\n";
 	}
-	vector<string> cityNames;
-	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-
-	for (auto cityname : cities)
+	cityNames.assign(cities.size(), "");
+	for (const auto& cityname : cities)
 	{
 		cityNames.push_back(cityname.first);
 	}
-	sort(cityNames.begin(), cityNames.end());
-	cout << "{";
-	for (string city : cityNames)
+
+	std::sort(cityNames.begin(), cityNames.end());
+	std::cout << "{";
+	std::cout << "TESTING";
+	for (const auto& city : cityNames)
 	{
-		Stats cur = cities[city];
-		wcout << converter.from_bytes(city);
-		cout << "=" << cur.min << "/" << cur.sum / cur.count << "/" << cur.max << ", ";
+		const Stats& cur = cities[city];
+		std::cout << (city);
+		std::cout << "=" << cur.min << "/" << cur.sum / cur.count << "/" << cur.max << ", ";
 	}
-	cout << "}" << "\n";
+	std::cout << "}" << "\n";
 }
 
 long long Ver1::runVer1(std::string path)
 {
-	using namespace chrono;
+	using namespace std::chrono;
 	this->path= path;
 	auto start = high_resolution_clock::now();
 

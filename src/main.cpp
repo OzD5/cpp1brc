@@ -5,7 +5,7 @@
 
 int main()
 {
-	std::string path = "Data/TESTIMEASURE.txt";
+	std::string path = "Data/measurements.txt";
 	std::cout << "Press enter to start: ";
 	std::cin.ignore();
 
